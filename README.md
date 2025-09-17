@@ -4,13 +4,13 @@ A full-stack movie ticket booking application built with the MERN (MongoDB, Expr
 
 ## ✨ Features
 
--   User registration and login with JWT authentication.
--   Browse a list of currently showing movies.
--   View detailed information for each movie.
--   Interactive seat selection grid to choose seats.
--   Create bookings for specific showtimes.
--   View a personal history of all past bookings.
--   Protected routes on the backend to secure user-specific data.
+-   **User Authentication:** Secure user registration and login with JWT and bcrypt.js.
+-   **Movie Browsing:** Fetches and displays a list of available movies from the database.
+-   **Dynamic Showtimes:** View movie details with a list of upcoming, bookable showtimes. The system automatically disables showtimes that are in the past.
+-   **Interactive Seat Selection:** A visual, clickable seat grid that shows already booked seats and allows users to select multiple seats.
+-   **Booking System:** Create new bookings that are linked to a specific user, movie, and showtime.
+-   **Personal Booking History:** A protected route and page for users to view their past bookings.
+-   **RESTful API:** A well-structured backend API built with Node.js and Express.
 
 ## 🛠️ Tech Stack
 
