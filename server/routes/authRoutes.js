@@ -19,7 +19,7 @@ router.post('/register', async (req, res) => {
     await user.save();
     
     // Create and sign a JWT
-    const payload = { user: { id: user.id } };
+    const payload = { id: user.id };
     jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: '5h' }, (err, token) => {
       if (err) throw err;
       res.json({ token });
@@ -50,7 +50,7 @@ router.post('/login', async (req, res) => {
     }
 
     // If credentials are correct, create and return a JWT
-    const payload = { user: { id: user.id } };
+    const payload = { id: user.id };
     jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: '5h' }, (err, token) => {
       if (err) throw err;
       res.json({ token });

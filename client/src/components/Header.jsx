@@ -13,10 +13,10 @@ const Header = () => {
         <ul>
           {token ? (
             // If user is logged in (token exists)
-            <li>
+            <>
               <li><Link to="/my-bookings">My Bookings</Link></li> 
               <button onClick={logout}>Logout</button>
-            </li>
+            </>
           ) : (
             // If user is logged out (no token)
             <>

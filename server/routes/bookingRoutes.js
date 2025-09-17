@@ -10,12 +10,18 @@ router.post('/', protect, async (req, res) => {
   // 'protect' runs first. If the token is invalid, this code will never be reached.
   
   const { movie, seats, showtime } = req.body;
+
+  const showtimeDate = new Date(showtime);
+  
+  if (showtimeDate < new Date()) {
+    return res.status(400).json({ msg: 'Cannot book a ticket for a past showtime.' });
+  }
   
   try {
     const newBooking = new Booking({
       movie,
       seats,
-      showtime,
+      showtime : showtimeDate,
       user: req.user.id, // We get the user ID from the middleware
     });
 

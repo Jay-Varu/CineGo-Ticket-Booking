@@ -8,25 +8,50 @@ const MovieDetailPage = () => {
   const { id } = useParams(); 
   const [movie, setMovie] = useState(null);
   const [loading, setLoading] = useState(true);
-  const { token } = useAuth(); // Get the token from our context
+  const [error, setError] = useState(''); 
+  const { token } = useAuth();
   const [isSelectorOpen, setIsSelectorOpen] = useState(false); // State to control the modal
-
-  // Hardcode a showtime for simplicity. In a real app, this would be dynamic.
-  const showtime = new Date("2025-08-20T20:00:00");
+  const [selectedShowtime, setSelectedShowtime] = useState(null); // State for the selected showtime
 
   useEffect(() => {
-    // CRITICAL: Ensure this URL uses backticks (` `) for the template literal
+    console.log("Fetching movie with ID:", id);
+    setLoading(true);
+    setError('');
+
     fetch(`http://localhost:5000/api/movies/${id}`)
-      .then(res => res.json())
+      .then(res => {
+        console.log("Received response from server:", res);
+        if (!res.ok) {
+          throw new Error(`HTTP error! status: ${res.status}`);
+        }
+        return res.json();
+      })
       .then(data => {
-        setMovie(data);
-        setLoading(false);
+        console.log("Received movie data:", data);
+        if (data && data._id) {
+          setMovie(data);
+        } else {
+          throw new Error("Movie data not found in response.");
+        }
       })
       .catch(err => {
         console.error("Failed to fetch movie details:", err);
+        setError(err.message);
+      })
+      .finally(() => {
         setLoading(false);
+        console.log("Finished fetching.");
       });
-  }, [id]); // The effect re-runs if the id in the URL changes
+  }, [id]); 
+
+  const handleShowtimeClick = (showtime) => {
+    if (!token) {
+      alert("Please log in to book tickets.");
+      return;
+    }
+    setSelectedShowtime(showtime);
+    setIsSelectorOpen(true);
+  };
 
   // This function is passed down to the SeatSelector component
   const handleConfirmBooking = async (selectedSeats) => {
@@ -38,7 +63,7 @@ const MovieDetailPage = () => {
     const bookingDetails = {
       movie: movie._id,
       seats: selectedSeats,
-      showtime: showtime,
+      showtime: selectedShowtime,
     };
     
     try {
@@ -63,31 +88,52 @@ const MovieDetailPage = () => {
     }
   };
 
-  if (loading) {
-    return <p>Loading details...</p>;
-  }
-
-  if (!movie) {
-    return <p>Movie not found!</p>;
-  }
+  if (loading) return <p>Loading details...</p>;
+  if (error) return <p>Error: {error}</p>;
+  if (!movie) return <p>Movie not found!</p>;
 
   return (
-    <div className="movie-detail-container">
-      <h1>{movie.title}</h1>
-      <img src={movie.posterUrl} alt={movie.title} />
-      <p><strong>Genre:</strong> {movie.genre}</p>
-      <p><strong>Rating:</strong> {movie.rating}</p>
-      
-      <div className="booking-section">
-        {token ? (
-          // If logged in, show the booking button
-          <button onClick={handleBooking}>Book Tickets</button>
-        ) : (
-          // If logged out, show a message with a link to the login page
-          <p>Please <Link to="/login">log in</Link> to book tickets.</p>
-        )}
+    <>
+      <div className="movie-detail-container">
+        <h1>{movie.title}</h1>
+        <img src={movie.posterUrl} alt={movie.title} />
+        <p><strong>Genre:</strong> {movie.genre}</p>
+        <p><strong>Rating:</strong> {movie.rating}</p>
+        
+        <div className="showtime-selection">
+          <h3>Select a Showtime:</h3>
+          <div className="showtime-buttons">
+            {movie && movie.showtimes && movie.showtimes.map((showtimeStr) => {
+              const showtime = new Date(showtimeStr);
+              const isPast = showtime < new Date(); 
+
+              return (
+                <button 
+                  key={showtimeStr} 
+                  onClick={() => handleShowtimeClick(showtime)}
+                  disabled={isPast} // Disable the button if the showtime is in the past
+                  title={isPast ? "This showtime has already passed" : ""}
+                >
+                  {showtime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+        
+        {!token && <p>Please <Link to="/login">log in</Link> to book tickets.</p>}
       </div>
-    </div>
+
+      {/* Conditionally render the SeatSelector modal */}
+      {isSelectorOpen && (
+        <SeatSelector 
+          movieId={movie._id}
+          showtime={selectedShowtime}
+          onBookingConfirm={handleConfirmBooking}
+          onClose={() => setIsSelectorOpen(false)}
+        />
+      )}
+    </>
   );
 };
 

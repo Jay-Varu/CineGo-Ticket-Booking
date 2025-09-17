@@ -1,4 +1,5 @@
 import React from 'react';
+import './MovieCard.css';
 import { Link } from 'react-router-dom';
 
 // This component receives 'movie' data as a prop from its parent

@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import './MovieListPage.css';
 import MovieCard from '../components/MovieCard'; // Import the new component
 
 const MovieListPage = () => {
@@ -23,10 +24,13 @@ const MovieListPage = () => {
   }
 
   return (
-    <div className="movie-list">
-      {movies.map(movie => (
-        <MovieCard key={movie._id} movie={movie} />
-      ))}
+    <div className="movie-list-page">
+      <h1>Now Showing</h1>
+      <div className="movie-list">
+        {movies.map(movie => (
+          <MovieCard key={movie._id} movie={movie} />
+        ))}
+      </div>
     </div>
   );
 };

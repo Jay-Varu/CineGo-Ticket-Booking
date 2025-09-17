@@ -3,7 +3,7 @@ const mongoose = require('mongoose');
 const movieSchema = new mongoose.Schema({
   title: {
     type: String,
-    required: true, // This field must exist
+    required: true,
   },
   genre: {
     type: String,
@@ -17,7 +17,12 @@ const movieSchema = new mongoose.Schema({
     type: Number,
     min: 0,
     max: 10,
-  }
+  },
+  showtimes: {
+    type: [Date],
+    required: true,
+    default: [],
+  },
 });
 
 // A Model is a wrapper on the Schema that provides an interface
