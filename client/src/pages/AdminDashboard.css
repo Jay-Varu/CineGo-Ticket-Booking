@@ -1,0 +1,100 @@
+.admin-dashboard {
+  padding: 2rem 0;
+}
+
+.admin-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+}
+
+.admin-header .btn {
+  font-size: 1rem;
+}
+
+.admin-movie-list {
+  background-color: var(--surface);
+  border-radius: var(--border-radius);
+  overflow: hidden;
+  border: 1px solid #2a2a2a;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  color: var(--on-surface);
+}
+
+thead {
+  background-color: #2a2a2a;
+}
+
+th {
+  padding: 1rem 1.5rem;
+  text-align: left;
+  font-size: 0.9rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--on-primary);
+}
+
+td {
+  padding: 1rem 1.5rem;
+  border-bottom: 1px solid #2a2a2a;
+  vertical-align: middle;
+}
+
+tr:last-child td {
+  border-bottom: none;
+}
+
+.movie-info {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.movie-info img {
+  width: 60px;
+  height: 90px;
+  object-fit: cover;
+  border-radius: 4px;
+}
+
+.movie-info span {
+  font-weight: 500;
+  color: var(--on-surface);
+}
+
+.actions .btn-edit,
+.actions .btn-delete {
+    margin-right: 1rem;
+    text-decoration: none;
+    border: none;
+    background: none;
+    cursor: pointer;
+    transition: color var(--transition-speed);
+    font-size: 0.9rem;
+    font-weight: 500;
+    padding: 0.5rem 1rem;
+    border-radius: var(--border-radius);
+}
+
+.actions .btn-edit {
+    color: var(--primary);
+    border: 1px solid var(--primary);
+}
+
+.actions .btn-edit:hover {
+    background-color: rgba(0, 123, 255, 0.1);
+}
+
+.actions .btn-delete {
+  color: #ff4d4d;
+  border: 1px solid #ff4d4d;
+}
+
+.actions .btn-delete:hover {
+    background-color: rgba(255, 77, 77, 0.1);
+}

@@ -1,46 +1,73 @@
 .bookings-container {
-  padding: 2rem;
-  max-width: 900px;
-  margin: 0 auto;
-}
-
-.bookings-container h2 {
-  text-align: center;
-  margin-bottom: 2rem;
+  padding: 2rem 0;
 }
 
 .bookings-list {
   display: flex;
   flex-direction: column;
-  gap: 1.5rem;
+  gap: 2rem;
 }
 
 .booking-card {
   display: flex;
-  gap: 1.5rem;
-  background-color: #1e1e1e;
-  border-radius: 8px;
-  padding: 1rem;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  gap: 2rem;
+  background-color: var(--surface);
+  border-radius: var(--border-radius);
+  padding: 2rem;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  border: 1px solid #2a2a2a;
+  transition: all var(--transition-speed);
+}
+
+.booking-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
 }
 
 .booking-card img {
-  width: 120px;
-  height: 180px;
+  width: 130px;
+  height: 195px;
   object-fit: cover;
-  border-radius: 4px;
+  border-radius: var(--border-radius);
 }
 
 .booking-details {
   display: flex;
   flex-direction: column;
+  justify-content: center;
 }
 
 .booking-details h3 {
   margin: 0 0 1rem 0;
-  color: #1c92d2;
+  color: var(--on-primary);
+  font-size: 1.5rem;
 }
 
 .booking-details p {
-  margin: 0.25rem 0;
+  margin: 0.3rem 0;
+  color: var(--on-surface-variant);
+}
+
+.booking-details strong {
+  color: var(--on-surface);
+  font-weight: 500;
+}
+
+.past-booking {
+  opacity: 0.7;
+}
+
+.cancel-btn {
+  margin-top: 1rem;
+  padding: 0.5rem 1rem;
+  background-color: var(--error);
+  color: var(--on-error);
+  border: none;
+  border-radius: var(--border-radius);
+  cursor: pointer;
+  transition: background-color var(--transition-speed);
+}
+
+.cancel-btn:hover {
+  background-color: #ff4d4d;
 }

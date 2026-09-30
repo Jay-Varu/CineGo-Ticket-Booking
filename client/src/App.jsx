@@ -5,7 +5,13 @@ import MovieDetailPage from './pages/MovieDetailPage';
 import RegisterPage from './pages/RegisterPage'; 
 import LoginPage from './pages/LoginPage';
 import MyBookingsPage from './pages/MyBookingsPage';
+
+import AdminRoute from './components/AdminRoute';
+import AdminDashboard from './pages/AdminDashboard';
+import AddMoviePage from './pages/AddMoviePage';
+import EditMoviePage from './pages/EditMoviePage';
 import './App.css';
+// import './pages/MovieDetailPage.css';
 
 function App() {
   return (
@@ -18,6 +24,13 @@ function App() {
           <Route path="/register" element={<RegisterPage />} /> 
           <Route path="/login" element={<LoginPage />} /> 
           <Route path="/my-bookings" element={<MyBookingsPage />} />
+
+          {/* Admin Routes */}
+          <Route path="/admin" element={<AdminRoute />}>
+            <Route path="dashboard" element={<AdminDashboard />} />
+            <Route path="movies/add" element={<AddMoviePage />} />
+            <Route path="movies/edit/:id" element={<EditMoviePage />} />
+          </Route>
         </Routes>
       </main>
     </div>

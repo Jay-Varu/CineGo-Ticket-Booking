@@ -14,7 +14,8 @@ const SeatSelector = ({ movieId, showtime, onBookingConfirm, onClose }) => {
     // Fetch the seats that are already booked for this movie and showtime
     const fetchBookedSeats = async () => {
       try {
-        const res = await fetch(`http://localhost:5000/api/bookings/taken-seats/${movieId}/${showtime.toISOString().split('T')[0]}`);
+        const encodedShowtime = encodeURIComponent(showtime.toISOString());
+        const res = await fetch(`http://localhost:5000/api/bookings/taken-seats/${movieId}/${encodedShowtime}`);
         const data = await res.json();
         setBookedSeats(data);
       } catch (err) {
@@ -56,10 +57,12 @@ const SeatSelector = ({ movieId, showtime, onBookingConfirm, onClose }) => {
           ))}
         </div>
         <p>You have selected {selectedSeats.length} seats.</p>
-        <button onClick={() => onBookingConfirm(selectedSeats)} disabled={selectedSeats.length === 0}>
-          Confirm Booking
-        </button>
-        <button onClick={onClose} style={{ marginLeft: '1rem' }}>Cancel</button>
+        <div className="booking-actions">
+          <button onClick={() => onBookingConfirm(selectedSeats)} className="btn" disabled={selectedSeats.length === 0}>
+            Confirm Booking
+          </button>
+          <button onClick={onClose} className="btn btn-secondary">Cancel</button>
+        </div>
       </div>
     </div>
   );

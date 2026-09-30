@@ -1,14 +1,15 @@
 const express = require('express');
 const router = express.Router();
 const Movie = require('../models/Movie');
+const Booking = require('../models/Booking');
+const { protect, admin } = require('../middleware/authMiddleware');
 
 // @route   GET /api/movies
 // @desc    Get all movies
 router.get('/', async (req, res) => {
   try {
-    // Use the Movie model to find all documents in the movies collection
     const movies = await Movie.find();
-    res.json(movies); // Send the movies back as a JSON response
+    res.json(movies);
   } catch (err) {
     console.error(err.message);
     res.status(500).send('Server Error');
@@ -19,21 +20,67 @@ router.get('/', async (req, res) => {
 // @desc    Get a single movie by its ID
 router.get('/:id', async (req, res) => {
   try {
-    // req.params.id gets the 'id' value from the URL
     const movie = await Movie.findById(req.params.id);
-
-    if(!movie) {
+    if (!movie) {
       return res.status(404).json({ msg: 'Movie not found' });
     }
-
-    res.json(movie); // Send the found movie back as a JSON response
-
+    res.json(movie);
   } catch (err) {
     console.error(err.message);
-    //if ID is not a valid format, it might cause a server error
     res.status(500).send('Server Error');
   }
 });
 
+// @route   POST /api/movies/admin/add
+// @desc    Add a new movie (Admin only)
+router.post('/admin/add', [protect, admin], async (req, res) => {
+  const { title, genre, posterUrl, showtimes } = req.body;
+  try {
+    const newMovie = new Movie({ title, genre, posterUrl, showtimes });
+    const movie = await newMovie.save();
+    res.json(movie);
+  } catch (err) {
+    console.error(err.message);
+    res.status(500).send('Server Error');
+  }
+});
+
+// @route   PUT /api/movies/admin/edit/:id
+// @desc    Update a movie (Admin only)
+router.put('/admin/edit/:id', [protect, admin], async (req, res) => {
+  const { title, genre, posterUrl, showtimes } = req.body;
+  try {
+    let movie = await Movie.findById(req.params.id);
+    if (!movie) {
+      return res.status(404).json({ msg: 'Movie not found' });
+    }
+    movie.title = title;
+    movie.genre = genre;
+    movie.posterUrl = posterUrl;
+    movie.showtimes = showtimes;
+    await movie.save();
+    res.json(movie);
+  } catch (err) {
+    console.error(err.message);
+    res.status(500).send('Server Error');
+  }
+});
+
+// @route   DELETE /api/movies/admin/delete/:id
+// @desc    Delete a movie (Admin only)
+router.delete('/admin/delete/:id', [protect, admin], async (req, res) => {
+  try {
+    const movie = await Movie.findById(req.params.id);
+    if (!movie) {
+      return res.status(404).json({ msg: 'Movie not found' });
+    }
+    await Booking.deleteMany({ movie: movie._id });
+    await Movie.findByIdAndDelete(movie._id);
+    res.json({ msg: 'Movie removed' });
+  } catch (err) {
+    console.error(err.message);
+    res.status(500).send('Server Error');
+  }
+});
 
 module.exports = router;

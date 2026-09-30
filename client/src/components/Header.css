@@ -2,48 +2,64 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 1rem 2rem;
-  background-color: #1a1a1a;
-  color: white;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  padding: 1.5rem 2rem; /* Added horizontal padding */
+  background-color: var(--surface);
+  border-bottom: 1px solid #2a2a2a;
 }
 
 .logo {
-  font-size: 1.5rem;
-  font-weight: bold;
-  color: white;
-  text-decoration: none;
+  font-size: 1.8rem;
+  font-weight: 700;
+  color: var(--primary);
 }
 
 .main-header nav ul {
-  margin: 0;
-  padding: 0;
   list-style: none;
   display: flex;
-  gap: 1.5rem;
   align-items: center;
+  gap: 2rem;
 }
 
 .main-header nav a {
-  color: #e0e0e0;
-  text-decoration: none;
-  font-size: 1rem;
-  transition: color 0.2s ease-in-out;
+  color: var(--on-surface-variant);
+  font-weight: 500;
+  position: relative;
+  padding-bottom: 5px;
+  transition: color var(--transition-speed);
 }
 
-.main-header nav a:hover {
-  color: #1c92d2;
+.main-header nav a::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 0;
+  height: 2px;
+  background-color: var(--primary);
+  transition: width var(--transition-speed) ease-in-out;
+}
+
+.main-header nav a:hover,
+.main-header nav a.active {
+  color: var(--on-primary);
+}
+
+.main-header nav a:hover::after,
+.main-header nav a.active::after {
+  width: 100%;
 }
 
 .main-header nav button {
-  background: none;
+  background: var(--primary);
   border: none;
-  color: #e0e0e0;
+  color: var(--on-primary);
+  padding: 0.6rem 1.2rem;
+  border-radius: var(--border-radius);
   cursor: pointer;
-  font-size: 1rem;
-  font-family: inherit;
+  transition: all var(--transition-speed);
+  font-weight: 500;
 }
 
 .main-header nav button:hover {
-  color: #1c92d2;
+  background-color: #0056b3; /* Darker shade */
 }

@@ -1,37 +1,83 @@
 .auth-container {
   display: flex;
-  flex-direction: column;
-  align-items: center;
   justify-content: center;
+  align-items: center;
+  min-height: 80vh;
   padding: 2rem;
-  min-height: 70vh;
 }
 
-.auth-container form {
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
+.auth-form {
   width: 100%;
-  max-width: 400px;
-  padding: 2rem;
-  border-radius: 8px;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-  background-color: #f9f9f9;
+  max-width: 420px;
+  padding: 3rem;
+  background-color: var(--surface);
+  border-radius: var(--border-radius);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+  border: 1px solid #2a2a2a;
 }
 
-.auth-container h2 {
-    text-align: center;
-    margin-bottom: 1.5rem;
-    color: #333;
+.auth-form h2 {
+  text-align: center;
+  margin-bottom: 2.5rem;
+  font-size: 2.2rem;
+  color: var(--on-primary);
 }
 
-.auth-container input {
-  padding: 0.75rem;
-  border: 1px solid #ccc;
-  border-radius: 4px;
+.form-group {
+  margin-bottom: 1.5rem;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 0.75rem;
+  color: var(--on-surface-variant);
+  font-weight: 500;
+}
+
+.form-group input {
+  width: 100%;
+  padding: 0.9rem 1.2rem;
+  background-color: #2c2c2c; /* Slightly lighter than background */
+  border: 1px solid #3a3a3a;
+  border-radius: var(--border-radius);
+  color: var(--on-surface);
   font-size: 1rem;
+  transition: all var(--transition-speed);
 }
 
-.auth-container form button {
-    width: 100%;
+.form-group input:focus {
+  outline: none;
+  border-color: var(--primary);
+  background-color: var(--background);
+  box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.25);
+}
+
+.btn {
+  width: 100%;
+  font-size: 1.1rem;
+  padding: 0.9rem 1.5rem;
+  margin-top: 1rem;
+  background-color: var(--primary);
+  color: var(--on-primary);
+  border: none;
+  border-radius: var(--border-radius);
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.btn:hover:not(:disabled) {
+  background-color: var(--primary-variant);
+}
+
+.auth-switch {
+  text-align: center;
+  margin-top: 1.5rem;
+}
+
+.auth-switch p {
+  color: var(--on-surface-variant);
+}
+
+.auth-switch a {
+  font-weight: 500;
 }

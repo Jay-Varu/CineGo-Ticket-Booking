@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const Booking = require('../models/Booking');
+const Movie = require('../models/Movie');
 const { protect } = require('../middleware/authMiddleware');
 
 // @route   POST /api/bookings
@@ -12,15 +13,33 @@ router.post('/', protect, async (req, res) => {
   const { movie, seats, showtime } = req.body;
 
   const showtimeDate = new Date(showtime);
-  
-  if (showtimeDate < new Date()) {
+  if (Number.isNaN(showtimeDate.getTime()) || showtimeDate < new Date()) {
     return res.status(400).json({ msg: 'Cannot book a ticket for a past showtime.' });
   }
   
   try {
+    const movieExists = await Movie.exists({ _id: movie });
+    if (!movieExists) {
+      return res.status(404).json({ msg: 'Movie not found' });
+    }
+
+    const requestedSeats = [...new Set(seats || [])];
+    if (requestedSeats.length === 0 || requestedSeats.length !== seats.length) {
+      return res.status(400).json({ msg: 'Please select unique seats.' });
+    }
+
+    const existingBooking = await Booking.findOne({
+      movie,
+      showtime: showtimeDate,
+      seats: { $in: requestedSeats },
+    });
+    if (existingBooking) {
+      return res.status(409).json({ msg: 'One or more selected seats are already booked.' });
+    }
+
     const newBooking = new Booking({
       movie,
-      seats,
+      seats: requestedSeats,
       showtime : showtimeDate,
       user: req.user.id, // We get the user ID from the middleware
     });
@@ -60,13 +79,43 @@ router.get('/taken-seats/:movieId/:showtime', async (req, res) => {
     // Find all bookings for that movie on that specific day (showtime)
     const bookings = await Booking.find({
       movie: movieId,
-      showtime: new Date(showtime), // Ensure we're comparing Date objects
+      showtime: new Date(decodeURIComponent(showtime)),
     });
     
     // Flatten the arrays of seats into a single array of taken seat numbers
     const takenSeats = bookings.flatMap(booking => booking.seats);
     
     res.json(takenSeats);
+  } catch (err) {
+    console.error(err.message);
+    res.status(500).send('Server Error');
+  }
+});
+
+// @route   DELETE /api/bookings/:id
+// @desc    Delete a booking
+// @access  Private
+router.delete('/:id', protect, async (req, res) => {
+  try {
+    const booking = await Booking.findById(req.params.id);
+
+    if (!booking) {
+      return res.status(404).json({ msg: 'Booking not found' });
+    }
+
+    // Verify that the user owns the booking
+    if (booking.user.toString() !== req.user.id) {
+      return res.status(401).json({ msg: 'User not authorized' });
+    }
+
+    if (booking.showtime <= new Date()) {
+      return res.status(400).json({ msg: 'Past bookings cannot be cancelled' });
+    }
+
+    // Use the model to find and delete the document by its ID directly.
+    await Booking.findByIdAndDelete(req.params.id);
+
+    res.json({ msg: 'Booking removed successfully' });
   } catch (err) {
     console.error(err.message);
     res.status(500).send('Server Error');

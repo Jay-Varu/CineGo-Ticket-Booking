@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
+import { useAuth } from '../context/useAuth';
 import './Auth.css';
 
 const LoginPage = () => {
   const [formData, setFormData] = useState({ email: '', password: '' });
-  const { login } = useAuth(); // Get the login function from context
+  const { login } = useAuth();
   const navigate = useNavigate();
 
   const handleChange = (e) => {
@@ -23,7 +23,7 @@ const LoginPage = () => {
 
       const data = await res.json();
       if (res.ok) {
-        login(data.token); // Use the login function from context
+        login(data.token);
         navigate('/');
       } else {
         alert(data.msg);
@@ -36,11 +36,17 @@ const LoginPage = () => {
 
   return (
     <div className="auth-container">
-      <form onSubmit={handleSubmit}>
+      <form onSubmit={handleSubmit} className="auth-form">
         <h2>Login</h2>
-        <input type="email" name="email" placeholder="Email" onChange={handleChange} required />
-        <input type="password" name="password" placeholder="Password" onChange={handleChange} required />
-        <button type="submit">Login</button>
+        <div className="form-group">
+          <label htmlFor="email">Email</label>
+          <input id="email" type="email" name="email" onChange={handleChange} required />
+        </div>
+        <div className="form-group">
+          <label htmlFor="password">Password</label>
+          <input id="password" type="password" name="password" onChange={handleChange} required />
+        </div>
+        <button type="submit" className="btn">Login</button>
       </form>
     </div>
   );

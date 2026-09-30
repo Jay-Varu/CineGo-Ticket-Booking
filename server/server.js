@@ -10,15 +10,13 @@ connectDB();
 const app = express();
 const PORT = 5000; // Port for backend
 
-
-
 // Middleware
 app.use(cors()); // Allows your frontend to make requests to this backend
 app.use(express.json()); // Allows server to accept JSON data
 
 // --- Import Routes ---
 const movieRoutes = require('./routes/movieRoutes');
-const authRoutes = require('./routes/authRoutes'); // Import auth routes
+const authRoutes = require('./routes/authRoutes');
 const bookingRoutes = require('./routes/bookingRoutes');
 
 // --- Use Routes ---

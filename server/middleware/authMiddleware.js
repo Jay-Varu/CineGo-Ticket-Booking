@@ -11,7 +11,7 @@ const protect = async (req, res, next) => {
       const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
       // Get user from the token and attach to request object
-      req.user = await User.findById(decoded.id).select('-password');
+      req.user = await User.findById(decoded.user.id).select('-password');
 
       if (!req.user) {
         return res.status(401).json({ msg: 'The user belonging to this token does no longer exist.' });
@@ -25,4 +25,12 @@ const protect = async (req, res, next) => {
   return res.status(401).json({ msg: 'Not authorized, no token' });
 };
 
-module.exports = { protect };
+const admin = (req, res, next) => {
+  if (req.user && req.user.role === 'admin') {
+    next();
+  } else {
+    res.status(403).json({ msg: 'Not authorized as an admin' });
+  }
+};
+
+module.exports = { protect, admin };

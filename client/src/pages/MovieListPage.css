@@ -1,19 +1,9 @@
-
 .movie-list-page {
-  max-width: 1280px;
-  margin: 0 auto;
-  padding: 20px;
-}
-
-.movie-list-page h1 {
-  text-align: center;
-  margin-bottom: 2rem;
-  font-size: 2.5rem;
-  color: #333;
+  padding: 2rem 0;
 }
 
 .movie-list {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-  gap: 20px;
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  gap: 2rem;
 }
