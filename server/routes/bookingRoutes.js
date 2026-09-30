@@ -13,18 +13,25 @@ router.post('/', protect, async (req, res) => {
   const { movie, seats, showtime } = req.body;
 
   const showtimeDate = new Date(showtime);
-  if (Number.isNaN(showtimeDate.getTime()) || showtimeDate < new Date()) {
+  if (Number.isNaN(showtimeDate.getTime())) {
+    return res.status(400).json({ msg: 'Please provide a valid showtime.' });
+  }
+  if (showtimeDate < new Date()) {
     return res.status(400).json({ msg: 'Cannot book a ticket for a past showtime.' });
   }
   
   try {
+    if (!Array.isArray(seats) || seats.length === 0) {
+      return res.status(400).json({ msg: 'Please select at least one seat.' });
+    }
+
     const movieExists = await Movie.exists({ _id: movie });
     if (!movieExists) {
       return res.status(404).json({ msg: 'Movie not found' });
     }
 
-    const requestedSeats = [...new Set(seats || [])];
-    if (requestedSeats.length === 0 || requestedSeats.length !== seats.length) {
+    const requestedSeats = [...new Set(seats)];
+    if (requestedSeats.length !== seats.length) {
       return res.status(400).json({ msg: 'Please select unique seats.' });
     }
 

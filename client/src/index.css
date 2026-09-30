@@ -14,9 +14,13 @@
   --background: #121212;
   --surface: #1E1E1E;
   --primary: #3A7BFF; /* A vibrant blue */
+  --primary-variant: #0056b3;
+  --surface-variant: #2C2C2C;
   --on-primary: #FFFFFF;
   --on-surface: #EAEAEA;
   --on-surface-variant: #BDBDBD; /* For secondary text */
+  --error: #DC3545;
+  --on-error: #FFFFFF;
 
   /* Typography */
   --font-family: 'Roboto', sans-serif;

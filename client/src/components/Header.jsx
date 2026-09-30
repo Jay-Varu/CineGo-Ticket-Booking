@@ -1,10 +1,10 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
+import { Link, NavLink } from 'react-router-dom';
 import { useAuth } from '../context/useAuth';
 import './Header.css';
 
 const Header = () => {
-  const { token, logout, user } = useAuth(); // Get token, logout function and user from context
+  const { token, logout, user } = useAuth();
 
   return (
     <header className="main-header">
@@ -15,9 +15,9 @@ const Header = () => {
             // If user is logged in (token exists)
             <>
               {user && user.role === 'admin' && (
-                <li><Link to="/admin/dashboard">Admin Dashboard</Link></li>
+                <li><NavLink to="/admin/dashboard">Admin Dashboard</NavLink></li>
               )}
-              <li><Link to="/my-bookings">My Bookings</Link></li> 
+              <li><NavLink to="/my-bookings">My Bookings</NavLink></li>
               <li>
                 <button onClick={logout}>Logout</button>
               </li>
@@ -25,8 +25,8 @@ const Header = () => {
           ) : (
             // If user is logged out (no token)
             <>
-              <li><Link to="/login">Login</Link></li>
-              <li><Link to="/register">Register</Link></li>
+              <li><NavLink to="/login">Login</NavLink></li>
+              <li><NavLink to="/register">Register</NavLink></li>
             </>
           )}
         </ul>

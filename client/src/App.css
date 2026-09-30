@@ -9,15 +9,6 @@ main {
   padding: 2rem 0;
 }
 
-.page-title {
-  font-size: 2.5rem;
-  margin-bottom: 2rem;
-  text-align: center;
-  color: var(--on-primary);
-  font-weight: 700;
-  letter-spacing: 1px;
-}
-
 .btn {
   display: inline-block;
   padding: 0.8rem 1.5rem;
