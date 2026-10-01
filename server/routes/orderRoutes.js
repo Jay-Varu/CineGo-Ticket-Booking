@@ -173,6 +173,11 @@ const finalizeOrder = async ({ orderId, userId, paymentId, signature }) => {
     throw error;
   }
 
+  const topologyType = mongoose.connection.getClient().topology?.description?.type;
+  if (topologyType === 'Single') {
+    return finalizeWithoutTransaction({ order, userId, paymentId, signature });
+  }
+
   const session = await mongoose.startSession();
   try {
     let confirmedOrder;

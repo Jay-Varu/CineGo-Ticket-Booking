@@ -73,21 +73,26 @@ const SeatSelector = ({ screeningId, token, onClose }) => {
         description: 'Movie tickets',
         order_id: orderData.payment.orderId,
         handler: async (response) => {
-          const confirmationResponse = await fetch(`http://localhost:5000/api/orders/${orderData.order._id}/confirm`, {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              Authorization: `Bearer ${token}`,
-            },
-            body: JSON.stringify({
-              razorpayPaymentId: response.razorpay_payment_id,
-              razorpaySignature: response.razorpay_signature,
-            }),
-          });
-          const confirmationData = await confirmationResponse.json();
-          if (!confirmationResponse.ok) throw new Error(confirmationData.msg || 'Payment verification failed.');
-          setPaid(true);
-          setProcessing(false);
+          try {
+            const confirmationResponse = await fetch(`http://localhost:5000/api/orders/${orderData.order._id}/confirm`, {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                Authorization: `Bearer ${token}`,
+              },
+              body: JSON.stringify({
+                razorpayPaymentId: response.razorpay_payment_id,
+                razorpaySignature: response.razorpay_signature,
+              }),
+            });
+            const confirmationData = await confirmationResponse.json();
+            if (!confirmationResponse.ok) throw new Error(confirmationData.msg || 'Payment verification failed.');
+            setPaid(true);
+          } catch (err) {
+            setError(err.message);
+          } finally {
+            setProcessing(false);
+          }
         },
         modal: {
           ondismiss: () => setProcessing(false),
