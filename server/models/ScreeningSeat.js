@@ -20,6 +20,10 @@ const screeningSeatSchema = new mongoose.Schema(
       index: true,
     },
     holdExpiresAt: Date,
+    hold: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'SeatHold',
+    },
     order: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'Order',

@@ -7,11 +7,12 @@ import './MovieDetailPage.css';
 const MovieDetailPage = () => {
   const { id } = useParams();
   const [movie, setMovie] = useState(null);
+  const [screenings, setScreenings] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const { token } = useAuth();
   const [isSelectorOpen, setIsSelectorOpen] = useState(false);
-  const [selectedShowtime, setSelectedShowtime] = useState(null);
+  const [selectedScreening, setSelectedScreening] = useState(null);
 
   useEffect(() => {
     setLoading(true);
@@ -24,9 +25,12 @@ const MovieDetailPage = () => {
         }
         return res.json();
       })
-      .then((data) => {
+      .then(async (data) => {
         if (data && data._id) {
           setMovie(data);
+          const screeningsResponse = await fetch(`http://localhost:5000/api/screenings?movieId=${data._id}`);
+          if (!screeningsResponse.ok) throw new Error('Unable to load screenings.');
+          setScreenings(await screeningsResponse.json());
         } else {
           throw new Error('Movie data not found in response.');
         }
@@ -39,47 +43,13 @@ const MovieDetailPage = () => {
       });
   }, [id]);
 
-  const handleShowtimeClick = (showtime) => {
+  const handleScreeningClick = (screening) => {
     if (!token) {
       alert('Please log in to book tickets.');
       return;
     }
-    setSelectedShowtime(showtime);
+    setSelectedScreening(screening);
     setIsSelectorOpen(true);
-  };
-
-  const handleConfirmBooking = async (selectedSeats) => {
-    if (selectedSeats.length === 0) {
-      alert('Please select at least one seat.');
-      return;
-    }
-
-    const bookingDetails = {
-      movie: movie._id,
-      seats: selectedSeats,
-      showtime: selectedShowtime,
-    };
-
-    try {
-      const res = await fetch('http://localhost:5000/api/bookings', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify(bookingDetails),
-      });
-
-      if (res.ok) {
-        alert(`Booking successful for seats: ${selectedSeats.join(', ')}`);
-        setIsSelectorOpen(false);
-      } else {
-        const data = await res.json();
-        alert(`Booking failed: ${data.msg}`);
-      }
-    } catch (err) {
-      console.error(err);
-    }
   };
 
   if (loading) return <p>Loading details...</p>;
@@ -97,17 +67,13 @@ const MovieDetailPage = () => {
             <div className="showtime-selection">
               <h3>Select a Showtime:</h3>
               <div className="showtime-buttons">
-                {movie.showtimes.map((showtimeStr) => {
-                  const showtime = new Date(showtimeStr);
-                  const isPast = showtime < new Date();
-
+                {screenings.map((screening) => {
+                  const showtime = new Date(screening.startsAt);
                   return (
                     <button
-                      key={showtimeStr}
+                      key={screening._id}
                       className="book-ticket-btn"
-                      onClick={() => handleShowtimeClick(showtime)}
-                      disabled={isPast}
-                      title={isPast ? 'This showtime has already passed' : ''}
+                      onClick={() => handleScreeningClick(screening)}
                     >
                       {showtime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                     </button>
@@ -122,9 +88,8 @@ const MovieDetailPage = () => {
 
       {isSelectorOpen && (
         <SeatSelector
-          movieId={movie._id}
-          showtime={selectedShowtime}
-          onBookingConfirm={handleConfirmBooking}
+          screeningId={selectedScreening._id}
+          token={token}
           onClose={() => setIsSelectorOpen(false)}
         />
       )}

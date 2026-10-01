@@ -1,39 +1,71 @@
 import React, { useState, useEffect } from 'react';
 import './SeatSelector.css';
 
-// This component receives the movie ID and a function to call when booking is confirmed
-const SeatSelector = ({ movieId, showtime, onBookingConfirm, onClose }) => {
+const SeatSelector = ({ screeningId, token, onClose }) => {
   const [selectedSeats, setSelectedSeats] = useState([]);
-  const [bookedSeats, setBookedSeats] = useState([]);
-
-  // Define a static seat layout
-  const rows = ['A', 'B', 'C', 'D', 'E', 'F'];
-  const seatsPerRow = 8;
+  const [seats, setSeats] = useState([]);
+  const [hold, setHold] = useState(null);
+  const [error, setError] = useState('');
 
   useEffect(() => {
-    // Fetch the seats that are already booked for this movie and showtime
-    const fetchBookedSeats = async () => {
+    const fetchSeats = async () => {
       try {
-        const encodedShowtime = encodeURIComponent(showtime.toISOString());
-        const res = await fetch(`http://localhost:5000/api/bookings/taken-seats/${movieId}/${encodedShowtime}`);
+        const res = await fetch(`http://localhost:5000/api/screenings/${screeningId}/seats`);
         const data = await res.json();
-        setBookedSeats(data);
+        if (!res.ok) throw new Error(data.msg || 'Unable to load seats.');
+        setSeats(data);
       } catch (err) {
-        console.error("Failed to fetch booked seats", err);
+        setError(err.message);
       }
     };
-    fetchBookedSeats();
-  }, [movieId, showtime]);
+    fetchSeats();
+  }, [screeningId]);
 
-  const handleSeatClick = (seatId) => {
-    if (bookedSeats.includes(seatId)) return; // Can't select booked seats
+  const handleSeatClick = (seat) => {
+    if (seat.status !== 'available' || hold) return;
 
     setSelectedSeats(prev => 
-      prev.includes(seatId) 
-        ? prev.filter(s => s !== seatId) // Deselect if already selected
-        : [...prev, seatId] // Select if not already selected
+      prev.includes(seat.seat._id)
+        ? prev.filter(id => id !== seat.seat._id)
+        : [...prev, seat.seat._id]
     );
   };
+
+  const handleHold = async () => {
+    try {
+      const res = await fetch(`http://localhost:5000/api/screenings/${screeningId}/holds`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ seatIds: selectedSeats }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.msg || 'Unable to hold seats.');
+      setHold(data);
+      setSeats(prev => prev.map((seat) => selectedSeats.includes(seat.seat._id) ? { ...seat, status: 'held' } : seat));
+    } catch (err) {
+      setError(err.message);
+    }
+  };
+
+  const handleClose = async () => {
+    if (hold) {
+      await fetch(`http://localhost:5000/api/screenings/${screeningId}/holds/${hold.token}`, {
+        method: 'DELETE',
+        headers: { Authorization: `Bearer ${token}` },
+      });
+    }
+    onClose();
+  };
+
+  const rows = seats.reduce((grouped, seat) => {
+    const row = seat.seat.row;
+    grouped[row] = grouped[row] || [];
+    grouped[row].push(seat);
+    return grouped;
+  }, {});
 
   return (
     <div className="seat-selector-modal">
@@ -41,27 +73,28 @@ const SeatSelector = ({ movieId, showtime, onBookingConfirm, onClose }) => {
         <h2>Select Your Seats</h2>
         <div className="screen"></div>
         <div className="seat-grid">
-          {rows.map(row => (
+          {Object.entries(rows).map(([row, rowSeats]) => (
             <div key={row} className="seat-row">
-              {Array.from({ length: seatsPerRow }, (_, i) => {
-                const seatId = `${row}${i + 1}`;
-                const isSelected = selectedSeats.includes(seatId);
-                const isBooked = bookedSeats.includes(seatId);
-                const seatClass = `seat ${isSelected ? 'selected' : ''} ${isBooked ? 'booked' : ''}`;
+              {rowSeats.map((seat) => {
+                const isSelected = selectedSeats.includes(seat.seat._id);
+                const isUnavailable = seat.status !== 'available';
+                const seatClass = `seat ${isSelected ? 'selected' : ''} ${isUnavailable ? 'booked' : ''}`;
                 
                 return (
-                  <div key={seatId} className={seatClass} onClick={() => handleSeatClick(seatId)} />
+                  <div key={seat.seat._id} className={seatClass} onClick={() => handleSeatClick(seat)} />
                 );
               })}
             </div>
           ))}
         </div>
+        {error && <p>{error}</p>}
+        {hold && <p>Seats held until {new Date(hold.expiresAt).toLocaleTimeString()}.</p>}
         <p>You have selected {selectedSeats.length} seats.</p>
         <div className="booking-actions">
-          <button onClick={() => onBookingConfirm(selectedSeats)} className="btn" disabled={selectedSeats.length === 0}>
-            Confirm Booking
+          <button onClick={handleHold} className="btn" disabled={selectedSeats.length === 0 || Boolean(hold)}>
+            Hold Seats
           </button>
-          <button onClick={onClose} className="btn btn-secondary">Cancel</button>
+          <button onClick={handleClose} className="btn btn-secondary">Release & Close</button>
         </div>
       </div>
     </div>

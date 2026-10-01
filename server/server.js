@@ -4,9 +4,6 @@ require('dotenv').config();  // loads the variable from .env
 
 const connectDB = require('./config/db'); // Import the function
 
-// --- connect to Database ---
-connectDB();
-
 const app = express();
 const PORT = 5000; // Port for backend
 
@@ -32,6 +29,11 @@ app.get('/api/test', (req, res) => {
   res.json({ message: "Hello from the backend!" });
 });
 
-app.listen(PORT, () => {
-  console.log(`Server is running on http://localhost:${PORT}`);
-});
+const startServer = async () => {
+  await connectDB();
+  app.listen(PORT, () => {
+    console.log(`Server is running on http://localhost:${PORT}`);
+  });
+};
+
+startServer();
