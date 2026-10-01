@@ -14,15 +14,15 @@ app.use(express.json()); // Allows server to accept JSON data
 // --- Import Routes ---
 const movieRoutes = require('./routes/movieRoutes');
 const authRoutes = require('./routes/authRoutes');
-const bookingRoutes = require('./routes/bookingRoutes');
 const screeningRoutes = require('./routes/screeningRoutes');
+const orderRoutes = require('./routes/orderRoutes');
 
 // --- Use Routes ---
 // Any request starting with '/api/movies' will be handled by movieRoutes
 app.use('/api/movies', movieRoutes);
 app.use('/api/auth', authRoutes); // Use auth routes
-app.use('/api/bookings', bookingRoutes);
 app.use('/api/screenings', screeningRoutes);
+app.use('/api/orders', orderRoutes);
 
 // A simple test route
 app.get('/api/test', (req, res) => {

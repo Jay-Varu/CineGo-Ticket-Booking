@@ -1,42 +1,49 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { useAuth } from '../context/useAuth';
 import './MyBookingsPage.css';
 
+const OrderCard = ({ order, past }) => {
+  const movie = order.screening?.movie;
+  const tickets = order.tickets || [];
+  const seats = tickets.map((ticket) => ticket.seat?.label).filter(Boolean).join(', ');
+
+  return (
+    <div className={`booking-card ${past ? 'past-booking' : ''}`}>
+      {movie ? <img src={movie.posterUrl} alt={movie.title} /> : <div className="booking-movie-unavailable">Movie unavailable</div>}
+      <div className="booking-details">
+        <h3>{movie?.title || 'Movie unavailable'}</h3>
+        <p><strong>Booking:</strong> {order.orderNumber}</p>
+        <p><strong>Showtime:</strong> {order.screening ? new Date(order.screening.startsAt).toLocaleString() : 'Unavailable'}</p>
+        <p><strong>Seats:</strong> {seats || 'Unavailable'}</p>
+        <p><strong>Status:</strong> {order.status}</p>
+        <p><strong>Paid:</strong> {(order.amount / 100).toFixed(2)} {order.currency}</p>
+      </div>
+    </div>
+  );
+};
+
 const MyBookingsPage = () => {
-  const [upcomingBookings, setUpcomingBookings] = useState([]);
-  const [pastBookings, setPastBookings] = useState([]);
+  const [upcomingOrders, setUpcomingOrders] = useState([]);
+  const [pastOrders, setPastOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const { token } = useAuth();
 
-  const fetchBookings = useCallback(async () => {
+  const fetchOrders = useCallback(async () => {
     if (!token) return;
 
     setLoading(true);
     try {
-      const res = await fetch('http://localhost:5000/api/bookings/mybookings', {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-        },
+      const res = await fetch('http://localhost:5000/api/orders', {
+        headers: { Authorization: `Bearer ${token}` },
       });
       const data = await res.json();
-      if (res.ok) {
-        const now = new Date();
-        const upcoming = [];
-        const past = [];
+      if (!res.ok) throw new Error(data.msg || 'Unable to load orders.');
 
-        data.forEach(booking => {
-          if (new Date(booking.showtime) > now) {
-            upcoming.push(booking);
-          } else {
-            past.push(booking);
-          }
-        });
-
-        setUpcomingBookings(upcoming);
-        setPastBookings(past);
-      }
+      const now = new Date();
+      setUpcomingOrders(data.filter((order) => order.screening && new Date(order.screening.startsAt) > now));
+      setPastOrders(data.filter((order) => !order.screening || new Date(order.screening.startsAt) <= now));
     } catch (err) {
-      console.error("Failed to fetch bookings:", err);
+      console.error('Failed to fetch orders:', err);
     } finally {
       setLoading(false);
     }
@@ -47,70 +54,25 @@ const MyBookingsPage = () => {
       setLoading(false);
       return;
     }
-    fetchBookings();
-  }, [fetchBookings, token]);
+    fetchOrders();
+  }, [fetchOrders, token]);
 
-  const handleCancel = async (bookingId) => {
-    if (window.confirm('Are you sure you want to cancel this booking?')) {
-      try {
-        const res = await fetch(`http://localhost:5000/api/bookings/${bookingId}`, {
-          method: 'DELETE',
-          headers: {
-            'Authorization': `Bearer ${token}`,
-          },
-        });
-
-        if (res.ok) {
-          fetchBookings(); // Refresh bookings after cancellation
-        }
-      } catch (err) {
-        console.error("Failed to cancel booking:", err);
-      }
-    }
-  };
-
-  if (loading) return <p>Loading your bookings...</p>;
+  if (loading) return <p>Loading your tickets...</p>;
 
   return (
     <div className="bookings-container">
-      <h2>My Bookings</h2>
-
+      <h2>My Tickets</h2>
       <h3>Upcoming Shows</h3>
-      {upcomingBookings.length === 0 ? (
-        <p>You have no upcoming bookings.</p>
-      ) : (
+      {upcomingOrders.length === 0 ? <p>You have no upcoming tickets.</p> : (
         <div className="bookings-list">
-          {upcomingBookings.map((booking) => (
-            <div key={booking._id} className="booking-card">
-              {booking.movie ? <img src={booking.movie.posterUrl} alt={booking.movie.title} /> : <div className="booking-movie-unavailable">Movie unavailable</div>}
-              <div className="booking-details">
-                <h3>{booking.movie?.title || 'Movie unavailable'}</h3>
-                <p><strong>Showtime:</strong> {new Date(booking.showtime).toLocaleString()}</p>
-                <p><strong>Seats:</strong> {booking.seats.join(', ')}</p>
-                <p><strong>Booked on:</strong> {new Date(booking.bookedAt).toLocaleDateString()}</p>
-                <button onClick={() => handleCancel(booking._id)} className="cancel-btn">Cancel Booking</button>
-              </div>
-            </div>
-          ))}
+          {upcomingOrders.map((order) => <OrderCard key={order._id} order={order} />)}
         </div>
       )}
 
       <h3 style={{ marginTop: '2rem' }}>Booking History</h3>
-      {pastBookings.length === 0 ? (
-        <p>You have no past bookings.</p>
-      ) : (
+      {pastOrders.length === 0 ? <p>You have no past tickets.</p> : (
         <div className="bookings-list">
-          {pastBookings.map((booking) => (
-            <div key={booking._id} className="booking-card past-booking">
-              {booking.movie ? <img src={booking.movie.posterUrl} alt={booking.movie.title} /> : <div className="booking-movie-unavailable">Movie unavailable</div>}
-              <div className="booking-details">
-                <h3>{booking.movie?.title || 'Movie unavailable'}</h3>
-                <p><strong>Showtime:</strong> {new Date(booking.showtime).toLocaleString()}</p>
-                <p><strong>Seats:</strong> {booking.seats.join(', ')}</p>
-                <p><strong>Booked on:</strong> {new Date(booking.bookedAt).toLocaleDateString()}</p>
-              </div>
-            </div>
-          ))}
+          {pastOrders.map((order) => <OrderCard key={order._id} order={order} past />)}
         </div>
       )}
     </div>

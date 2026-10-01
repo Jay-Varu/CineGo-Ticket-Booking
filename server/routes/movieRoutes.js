@@ -1,7 +1,6 @@
 const express = require('express');
 const router = express.Router();
 const Movie = require('../models/Movie');
-const Booking = require('../models/Booking');
 const { protect, admin } = require('../middleware/authMiddleware');
 
 // @route   GET /api/movies
@@ -74,7 +73,6 @@ router.delete('/admin/delete/:id', [protect, admin], async (req, res) => {
     if (!movie) {
       return res.status(404).json({ msg: 'Movie not found' });
     }
-    await Booking.deleteMany({ movie: movie._id });
     await Movie.findByIdAndDelete(movie._id);
     res.json({ msg: 'Movie removed' });
   } catch (err) {

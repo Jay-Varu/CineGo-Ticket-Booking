@@ -19,11 +19,6 @@ const screeningSeatSchema = new mongoose.Schema(
       default: 'available',
       index: true,
     },
-    holdExpiresAt: Date,
-    hold: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: 'SeatHold',
-    },
     order: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'Order',

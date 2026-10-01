@@ -1,11 +1,25 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import './SeatSelector.css';
+
+const loadRazorpay = () => new Promise((resolve) => {
+  if (window.Razorpay) {
+    resolve(true);
+    return;
+  }
+
+  const script = document.createElement('script');
+  script.src = 'https://checkout.razorpay.com/v1/checkout.js';
+  script.onload = () => resolve(true);
+  script.onerror = () => resolve(false);
+  document.body.appendChild(script);
+});
 
 const SeatSelector = ({ screeningId, token, onClose }) => {
   const [selectedSeats, setSelectedSeats] = useState([]);
   const [seats, setSeats] = useState([]);
-  const [hold, setHold] = useState(null);
   const [error, setError] = useState('');
+  const [processing, setProcessing] = useState(false);
+  const [paid, setPaid] = useState(false);
 
   useEffect(() => {
     const fetchSeats = async () => {
@@ -22,42 +36,73 @@ const SeatSelector = ({ screeningId, token, onClose }) => {
   }, [screeningId]);
 
   const handleSeatClick = (seat) => {
-    if (seat.status !== 'available' || hold) return;
+    if (seat.status !== 'available' || processing || paid) return;
 
-    setSelectedSeats(prev => 
-      prev.includes(seat.seat._id)
-        ? prev.filter(id => id !== seat.seat._id)
-        : [...prev, seat.seat._id]
-    );
+    setSelectedSeats((previous) => (
+      previous.includes(seat.seat._id)
+        ? previous.filter((id) => id !== seat.seat._id)
+        : [...previous, seat.seat._id]
+    ));
   };
 
-  const handleHold = async () => {
+  const handlePayment = async () => {
+    if (selectedSeats.length === 0) return;
+
+    setProcessing(true);
+    setError('');
     try {
-      const res = await fetch(`http://localhost:5000/api/screenings/${screeningId}/holds`, {
+      const orderResponse = await fetch('http://localhost:5000/api/orders', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify({ seatIds: selectedSeats }),
+        body: JSON.stringify({ screeningId, seatIds: selectedSeats }),
       });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.msg || 'Unable to hold seats.');
-      setHold(data);
-      setSeats(prev => prev.map((seat) => selectedSeats.includes(seat.seat._id) ? { ...seat, status: 'held' } : seat));
+      const orderData = await orderResponse.json();
+      if (!orderResponse.ok) throw new Error(orderData.msg || 'Unable to create payment order.');
+
+      const loaded = await loadRazorpay();
+      if (!loaded) throw new Error('Razorpay Checkout could not be loaded.');
+
+      const checkout = new window.Razorpay({
+        key: orderData.payment.keyId,
+        amount: orderData.payment.amount,
+        currency: orderData.payment.currency,
+        name: 'CineGo',
+        description: 'Movie tickets',
+        order_id: orderData.payment.orderId,
+        handler: async (response) => {
+          const confirmationResponse = await fetch(`http://localhost:5000/api/orders/${orderData.order._id}/confirm`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              Authorization: `Bearer ${token}`,
+            },
+            body: JSON.stringify({
+              razorpayPaymentId: response.razorpay_payment_id,
+              razorpaySignature: response.razorpay_signature,
+            }),
+          });
+          const confirmationData = await confirmationResponse.json();
+          if (!confirmationResponse.ok) throw new Error(confirmationData.msg || 'Payment verification failed.');
+          setPaid(true);
+          setProcessing(false);
+        },
+        modal: {
+          ondismiss: () => setProcessing(false),
+        },
+      });
+
+      checkout.on('payment.failed', (response) => {
+        setError(response.error?.description || 'Payment failed.');
+        setProcessing(false);
+      });
+      checkout.open();
     } catch (err) {
       setError(err.message);
+      setProcessing(false);
     }
-  };
-
-  const handleClose = async () => {
-    if (hold) {
-      await fetch(`http://localhost:5000/api/screenings/${screeningId}/holds/${hold.token}`, {
-        method: 'DELETE',
-        headers: { Authorization: `Bearer ${token}` },
-      });
-    }
-    onClose();
   };
 
   const rows = seats.reduce((grouped, seat) => {
@@ -79,22 +124,31 @@ const SeatSelector = ({ screeningId, token, onClose }) => {
                 const isSelected = selectedSeats.includes(seat.seat._id);
                 const isUnavailable = seat.status !== 'available';
                 const seatClass = `seat ${isSelected ? 'selected' : ''} ${isUnavailable ? 'booked' : ''}`;
-                
+
                 return (
-                  <div key={seat.seat._id} className={seatClass} onClick={() => handleSeatClick(seat)} />
+                  <div
+                    key={seat.seat._id}
+                    className={seatClass}
+                    onClick={() => handleSeatClick(seat)}
+                    role="button"
+                    tabIndex={isUnavailable ? -1 : 0}
+                    aria-label={`${seat.seat.label}${isUnavailable ? ' unavailable' : ''}`}
+                  />
                 );
               })}
             </div>
           ))}
         </div>
         {error && <p>{error}</p>}
-        {hold && <p>Seats held until {new Date(hold.expiresAt).toLocaleTimeString()}.</p>}
+        {paid && <p>Payment verified. Your tickets have been issued.</p>}
         <p>You have selected {selectedSeats.length} seats.</p>
         <div className="booking-actions">
-          <button onClick={handleHold} className="btn" disabled={selectedSeats.length === 0 || Boolean(hold)}>
-            Hold Seats
+          <button onClick={handlePayment} className="btn" disabled={selectedSeats.length === 0 || processing || paid}>
+            {processing ? 'Processing...' : 'Pay with Razorpay'}
           </button>
-          <button onClick={handleClose} className="btn btn-secondary">Release & Close</button>
+          <button onClick={onClose} className="btn btn-secondary" disabled={processing}>
+            Close
+          </button>
         </div>
       </div>
     </div>

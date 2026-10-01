@@ -2,8 +2,6 @@ const express = require('express');
 const mongoose = require('mongoose');
 const Screening = require('../models/Screening');
 const ScreeningSeat = require('../models/ScreeningSeat');
-const { protect } = require('../middleware/authMiddleware');
-const { createSeatHold, releaseSeatHold, releaseExpiredHolds, HOLD_MINUTES } = require('../services/seatHoldService');
 require('../models/Auditorium');
 require('../models/Venue');
 require('../models/Seat');
@@ -78,8 +76,6 @@ router.get('/:id/seats', async (req, res) => {
     const screening = await Screening.exists({ _id: req.params.id });
     if (!screening) return res.status(404).json({ msg: 'Screening not found' });
 
-    await releaseExpiredHolds(req.params.id);
-
     const seats = await ScreeningSeat.find({ screening: req.params.id })
       .populate('seat', 'row number label type')
       .sort({ 'seat.row': 1, 'seat.number': 1 });
@@ -91,33 +87,5 @@ router.get('/:id/seats', async (req, res) => {
   }
 });
 
-router.post('/:id/holds', protect, async (req, res) => {
-  try {
-    const result = await createSeatHold({
-      screeningId: req.params.id,
-      seatIds: req.body.seatIds,
-      userId: req.user.id,
-    });
-
-    res.status(201).json({
-      token: result.hold.token,
-      screeningId: result.hold.screening,
-      seatIds: result.hold.seats,
-      expiresAt: result.expiresAt,
-      holdMinutes: HOLD_MINUTES,
-    });
-  } catch (err) {
-    res.status(err.statusCode || 500).json({ msg: err.message || 'Server error' });
-  }
-});
-
-router.delete('/:id/holds/:token', protect, async (req, res) => {
-  try {
-    await releaseSeatHold({ token: req.params.token, userId: req.user.id });
-    res.json({ msg: 'Seat hold released' });
-  } catch (err) {
-    res.status(err.statusCode || 500).json({ msg: err.message || 'Server error' });
-  }
-});
 
 module.exports = router;
